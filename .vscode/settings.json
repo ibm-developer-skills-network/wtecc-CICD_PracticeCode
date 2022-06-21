@@ -1,0 +1,26 @@
+{
+    "python.pythonPath": "/usr/local/bin/python",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.testing.nosetestsEnabled": true,
+    "python.testing.nosetestArgs": ["-c=setup.cfg"],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "test*.py"
+    ],
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/*.pyc": true,
+        "**/__pycache__": true
+    },
+    "makefile.extensionOutputFolder": "./.vscode"    
+}
