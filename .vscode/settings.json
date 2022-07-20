@@ -1,7 +1,10 @@
 {
+    "markdown-preview-github-styles.colorTheme": "light",
+    "makefile.extensionOutputFolder": "./.vscode",
+    "git.mergeEditor": true,
     "python.pythonPath": "/usr/local/bin/python",
-    "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
     "python.testing.nosetestsEnabled": true,
     "python.testing.nosetestArgs": ["-c=setup.cfg"],
     "python.testing.pytestEnabled": false,
@@ -21,6 +24,5 @@
         "**/.DS_Store": true,
         "**/*.pyc": true,
         "**/__pycache__": true
-    },
-    "makefile.extensionOutputFolder": "./.vscode"    
+    }    
 }
