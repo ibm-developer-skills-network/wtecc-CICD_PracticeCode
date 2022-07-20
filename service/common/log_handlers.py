@@ -1,5 +1,5 @@
 ######################################################################
-# Copyright 2016, 2021 John J. Rofrano. All Rights Reserved.
+# Copyright 2016, 2022 John J. Rofrano. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,24 +15,20 @@
 ######################################################################
 
 """
-Log Handler module
+Log Handlers
+
+This module contains utility functions to set up logging
+consistently
 """
-
 import logging
-from service import app
 
 
-############################################################
-# set up logging for Flask applications
-############################################################
-def initialize_logging(log_level=None):
-    gunicorn_logger = logging.getLogger("gunicorn.error")
-    app.logger.handlers = gunicorn_logger.handlers
-    if log_level:
-        app.logger.setLevel(log_level)
-    else:
-        app.logger.setLevel(gunicorn_logger.level)
+def init_logging(app, logger_name: str):
+    """Set up logging for production"""
     app.logger.propagate = False
+    gunicorn_logger = logging.getLogger(logger_name)
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
     # Make all log formats consistent
     formatter = logging.Formatter(
         "[%(asctime)s] [%(levelname)s] [%(module)s] %(message)s", "%Y-%m-%d %H:%M:%S %z"

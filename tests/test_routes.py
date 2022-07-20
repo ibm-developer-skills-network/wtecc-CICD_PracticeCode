@@ -5,11 +5,8 @@ Test cases can be run with the following:
   nosetests -v --with-spec --spec-color
   coverage report -m
 """
-import logging
-from unittest.mock import patch
 from unittest import TestCase
-from redis.exceptions import ConnectionError
-from service.utils import log_handler, status  # HTTP Status Codes
+from service.common import status  # HTTP Status Codes
 from service.routes import app, reset_counters
 
 
@@ -23,7 +20,6 @@ class CounterTest(TestCase):
     def setUpClass(cls):
         """ This runs once before the entire test suite """
         app.testing = True
-        log_handler.initialize_logging(logging.CRITICAL)
 
     @classmethod
     def tearDownClass(cls):
@@ -44,8 +40,13 @@ class CounterTest(TestCase):
 ######################################################################
 
     def test_index(self):
-        """ It should call the home page """
+        """ It should call the index call """
         resp = self.app.get("/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_health(self):
+        """ It should be healthy """
+        resp = self.app.get("/health")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_create_counters(self):
@@ -57,6 +58,17 @@ class CounterTest(TestCase):
         self.assertEqual(data["name"], name)
         self.assertEqual(data["counter"], 0)
 
+    def test_create_duplicate_counter(self):
+        """ It should not Create a duplicate counter """
+        name = "foo"
+        resp = self.app.post(f"/counters/{name}")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        self.assertEqual(data["name"], name)
+        self.assertEqual(data["counter"], 0)
+        resp = self.app.post(f"/counters/{name}")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
     def test_list_counters(self):
         """ It should List counters """
         resp = self.app.get("/counters")
@@ -65,17 +77,15 @@ class CounterTest(TestCase):
         self.assertEqual(len(data), 0)
         # create a counter and name sure it appears in the list
         self.app.post("/counters/foo")
-        self.app.post("/counters/bar")
-        self.app.post("/counters/baz")
         resp = self.app.get("/counters")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
-        self.assertEqual(len(data), 3)
+        self.assertEqual(len(data), 1)
 
     def test_read_counters(self):
         """ It should Read a counter """
         name = "foo"
-        self.test_create_counters()
+        self.app.post(f"/counters/{name}")
         resp = self.app.get(f"/counters/{name}")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
@@ -85,7 +95,8 @@ class CounterTest(TestCase):
     def test_update_counters(self):
         """ It should Update a counter """
         name = "foo"
-        self.test_create_counters()
+        resp = self.app.post(f"/counters/{name}")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         resp = self.app.get(f"/counters/{name}")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
@@ -99,47 +110,23 @@ class CounterTest(TestCase):
         self.assertEqual(data["name"], name)
         self.assertEqual(data["counter"], 1)
 
-    def test_delete_counters(self):
-        """ It should Delete a counter """
-        name = "foo"
-        self.test_create_counters()
-        resp = self.app.delete(f"/counters/{name}")
-        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
-        resp = self.app.get(f"/counters/{name}")
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_method_not_allowed(self):
-        """ It should not allow method """
-        resp = self.app.post("/counters")
-        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def test_counter_already_exists(self):
-        """ It should report counter already exists """
-        name = "foo"
-        self.test_create_counters()
-        resp = self.app.post(f"/counters/{name}")
-        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
-
-    def test_update_not_found(self):
-        """ It should not update counter not found """
+    def test_update_missing_counters(self):
+        """ It should not Update a missing counter """
         name = "foo"
         resp = self.app.put(f"/counters/{name}")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_bad_connection_create(self):
-        """ It should fail with no database connection for create """
-        # make a call to fire first request trigger
-        resp = self.app.get("/counters")
-        with patch('service.routes.counter.get') as connection_error_mock:
-            connection_error_mock.side_effect = ConnectionError()
-            resp = self.app.post("/counters/foo")
-            self.assertEqual(resp.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-
-    def test_bad_connection_list(self):
-        """ It should fail with no database connection for list """
-        # make a call to fire first request trigger
-        resp = self.app.put("/counters/foo")
-        with patch('service.routes.counter.keys') as connection_error_mock:
-            connection_error_mock.side_effect = ConnectionError()
-            resp = self.app.get("/counters")
-            self.assertEqual(resp.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+    def test_delete_counters(self):
+        """ It should Delete a counter """
+        name = "foo"
+        # Create a counter
+        resp = self.app.post(f"/counters/{name}")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # Delete it twice should return the same
+        resp = self.app.delete(f"/counters/{name}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        resp = self.app.delete(f"/counters/{name}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        # Gte it to make sure it's really gone
+        resp = self.app.get(f"/counters/{name}")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
