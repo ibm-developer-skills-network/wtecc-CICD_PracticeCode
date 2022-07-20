@@ -1,33 +1,20 @@
-######################################################################
-# Copyright 2016, 2021 John J. Rofrano. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-######################################################################
-
 """
-Module for Hit Counter Service Routes
+Controller for routes
 """
-
-import os
-from redis import Redis
-from redis.exceptions import ConnectionError as RedisConnectionError
 from flask import jsonify, url_for, abort
-from service.utils import status
 from service import app
+from service.common import status
 
-# Connext to the Redis database
-# pylint: disable=invalid-name, global-variable-not-assigned
-counter: Redis = None
+COUNTER = {}
+
+
+############################################################
+# Health Endpoint
+############################################################
+@app.route("/health")
+def health():
+    """Health Status"""
+    return jsonify(dict(status="OK")), status.HTTP_200_OK
 
 
 ############################################################
@@ -35,7 +22,7 @@ counter: Redis = None
 ############################################################
 @app.route("/")
 def index():
-    """Root URL"""
+    """Returns information abut the service"""
     app.logger.info("Request for Base URL")
     return jsonify(
         status=status.HTTP_200_OK,
@@ -50,14 +37,10 @@ def index():
 ############################################################
 @app.route("/counters", methods=["GET"])
 def list_counters():
-    """List counters"""
+    """Lists all counters"""
     app.logger.info("Request to list all counters...")
-    try:
-        counters = [
-            dict(name=key, counter=int(counter.get(key))) for key in counter.keys("*")
-        ]
-    except RedisConnectionError as error:
-        abort(status.HTTP_503_SERVICE_UNAVAILABLE, str(error))
+
+    counters = [dict(name=count[0], counter=count[1]) for count in COUNTER.items()]
 
     return jsonify(counters)
 
@@ -67,16 +50,13 @@ def list_counters():
 ############################################################
 @app.route("/counters/<name>", methods=["POST"])
 def create_counters(name):
-    """Create counters"""
-    app.logger.info("Request to Create counter...")
-    try:
-        count = counter.get(name)
-        if count is not None:
-            abort(status.HTTP_409_CONFLICT, f"Counter [{name}] already exists")
+    """Creates a new counter"""
+    app.logger.info("Request to Create counter: %s...", name)
 
-        counter.set(name, 0)
-    except RedisConnectionError as error:
-        abort(status.HTTP_503_SERVICE_UNAVAILABLE, str(error))
+    if name in COUNTER:
+        return abort(status.HTTP_409_CONFLICT, f"Counter {name} already exists")
+
+    COUNTER[name] = 0
 
     location_url = url_for("read_counters", name=name, _external=True)
     return (
@@ -91,13 +71,14 @@ def create_counters(name):
 ############################################################
 @app.route("/counters/<name>", methods=["GET"])
 def read_counters(name):
-    """Read counters"""
-    app.logger.info("Request to Read counter...")
-    count = counter.get(name)
-    if count is None:
-        abort(status.HTTP_404_NOT_FOUND, f"Counter [{name}] does not exist")
+    """Reads a single counter"""
+    app.logger.info("Request to Read counter: %s...", name)
 
-    return jsonify(name=name, counter=int(count))
+    if name not in COUNTER:
+        return abort(status.HTTP_404_NOT_FOUND, f"Counter {name} does not exist")
+
+    counter = COUNTER[name]
+    return jsonify(name=name, counter=counter)
 
 
 ############################################################
@@ -105,14 +86,16 @@ def read_counters(name):
 ############################################################
 @app.route("/counters/<name>", methods=["PUT"])
 def update_counters(name):
-    """Update counters"""
-    app.logger.info("Request to Update counter...")
-    count = counter.get(name)
-    if count is None:
-        abort(status.HTTP_404_NOT_FOUND, f"Counter [{name}] does not exist")
+    """Updates a counter"""
+    app.logger.info("Request to Update counter: %s...", name)
 
-    count = counter.incr(name)
-    return jsonify(name=name, counter=count)
+    if name not in COUNTER:
+        return abort(status.HTTP_404_NOT_FOUND, f"Counter {name} does not exist")
+
+    COUNTER[name] += 1
+
+    counter = COUNTER[name]
+    return jsonify(name=name, counter=counter)
 
 
 ############################################################
@@ -120,44 +103,20 @@ def update_counters(name):
 ############################################################
 @app.route("/counters/<name>", methods=["DELETE"])
 def delete_counters(name):
-    """Delete counters"""
-    app.logger.info("Request to Delete counter...")
-    count = counter.get(name)
-    if count is not None:
-        counter.delete(name)
+    """Deletes a counter"""
+    app.logger.info("Request to Delete counter: %s...", name)
+
+    if name in COUNTER:
+        COUNTER.pop(name)
 
     return "", status.HTTP_204_NO_CONTENT
 
 
 ############################################################
-# U T I L I T Y   F U N C T I O N S
+# Utility for testing
 ############################################################
 def reset_counters():
-    """Resets all counters"""
-    global counter
-    if app.testing and counter:
-        counter.flushall()
-
-
-@app.before_first_request
-def init_db():
-    """Initializes the database"""
-    global counter  # pylint: disable=global-statement
-    app.logger.info("Initializing Redis database connection")
-    try:
-        if "DATABASE_URI" in os.environ:
-            DATABASE_URI = os.getenv("DATABASE_URI")
-            counter = Redis.from_url(
-                DATABASE_URI, encoding="utf-8", decode_responses=True
-            )
-        else:
-            REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-            REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
-            counter = Redis(
-                host=REDIS_HOST,
-                port=REDIS_PORT,
-                encoding="utf-8",
-                decode_responses=True,
-            )
-    except RedisConnectionError as error:
-        abort(status.HTTP_503_SERVICE_UNAVAILABLE, str(error))
+    """Removes all counters while testing"""
+    global COUNTER  # pylint: disable=global-statement
+    if app.testing:
+        COUNTER = {}
