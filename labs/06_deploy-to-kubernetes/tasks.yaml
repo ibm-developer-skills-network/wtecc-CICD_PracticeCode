@@ -1,0 +1,45 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: echo
+spec:
+  params:
+    - name: message
+      description: The message to echo
+      type: string
+  steps:
+    - name: echo-message
+      image: alpine:3
+      command: [/bin/echo]
+      args: ["$(params.message)"]
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: nose
+spec:
+  params:
+    - name: args
+      description: Arguments to pass to nose
+      type: string
+      default: "-v"
+  workspaces:
+    - name: source
+  steps:
+    - name: nosetests
+      image: python:3.9-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -e
+
+        echo "***** Environment *****"
+        python --version
+        pwd
+
+        echo "***** Installing dependencies *****"
+        python -m pip install --upgrade pip wheel
+        pip install -r requirements.txt
+
+        echo "***** Running nosetests with: $(params.args)"
+        nosetests $(params.args)
