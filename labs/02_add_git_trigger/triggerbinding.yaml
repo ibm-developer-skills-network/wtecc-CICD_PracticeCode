@@ -1,0 +1,5 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: <place-name-here>
+spec:
