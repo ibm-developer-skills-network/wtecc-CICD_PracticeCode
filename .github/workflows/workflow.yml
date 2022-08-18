@@ -3,7 +3,7 @@ name: CI workflow
 on:
   push:
     branches: [ "main" ]
-  pull_request:
+  pull-request:
     branches: [ "main" ]
 
 jobs:
