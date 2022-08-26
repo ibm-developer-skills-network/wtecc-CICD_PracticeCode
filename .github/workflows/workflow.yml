@@ -23,3 +23,13 @@ jobs:
         run: |
           flake8 service --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 service --count --max-complexity=10 --max-line-length=127 --statistics
+          steps:
+      - name: Upload code coverage
+      - uses: codecov/codecov-action@v2
+        with:
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        files: ./coverage1.xml
+        flags: unittests
+        fail_ci_if_error: true # optional (default = false)
+        verbose: true # optional (default = false)
+        version: "v0.1.13"
