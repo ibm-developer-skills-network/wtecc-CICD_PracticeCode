@@ -10,6 +10,13 @@ spec:
     - name: branch
       default: master
   tasks:
+    - name: init
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace          
+      taskRef:
+        name: cleanup
+
     - name: clone
       workspaces:
         - name: output
@@ -21,6 +28,8 @@ spec:
         value: $(params.repo-url)
       - name: revision
         value: $(params.branch)
+      runAfter:
+        - init      
 
     - name: lint
       workspaces:
