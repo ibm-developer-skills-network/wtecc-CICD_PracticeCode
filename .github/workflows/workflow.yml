@@ -1,9 +1,9 @@
 name: CI workflow
 on:
   push:
-    branches: main
+    branches: [ "main" ]
   pull_request:
-    branches: main
+    branches: [ "main" ]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,3 +19,5 @@ jobs:
         run: |
           flake8 service --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 service --count --max-complexity=10 --max-line-length=127 --statistics
+      - name: Run unit tests with nose
+        run: nosetests -v --with-spec --spec-color --with-coverage --cover-package=app
