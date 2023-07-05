@@ -8,3 +8,6 @@ name: CI workflow
       build:
         runs-on: ubuntu-latest
         container: python:3.9-slim
+          Steps: 
+            name: ChechOut
+            uses: actions/checkout@v3
