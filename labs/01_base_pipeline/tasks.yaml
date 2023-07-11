@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: <Mostafa-Bazyar-is-my-Love>
+  name: mostafa-Bazyar-is-my-Love
 spec:
   steps:
  -name: echo1
