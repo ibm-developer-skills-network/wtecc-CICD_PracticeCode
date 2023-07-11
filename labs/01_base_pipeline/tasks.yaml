@@ -4,3 +4,7 @@ metadata:
   name: <Mostafa-Bazyar-is-my-Love>
 spec:
   steps:
+ -name: echo1
+  image: alpine:3
+  command: [/bin/echo]
+  args: ["Hello mostafa1"]
