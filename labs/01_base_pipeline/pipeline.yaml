@@ -1,6 +1,10 @@
 apiVersion: tekton.dev/v1beta1
-kind: Pipeline
-metadata:  
-  name: <place-name-here>
+kind: Task
+metadata:
+  name: hello-world
 spec:
-  tasks:
+  steps:
+    - name: echo
+      image: alpine:3
+      command: [/bin/echo]
+      args: ["Hello World!"]
