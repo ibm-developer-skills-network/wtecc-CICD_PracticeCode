@@ -1,10 +1,9 @@
 apiVersion: tekton.dev/v1beta1
-kind: Task
+kind: Pipeline
 metadata:
-  name: hello-world
+  name: hello-pipeline
 spec:
-  steps:
-    - name: echo
-      image: alpine:3
-      command: [/bin/echo]
-      args: ["Hello World!"]
+  tasks:
+    - name: hello
+      taskRef:
+        name: mostafa-Bazyar-is-my-Love
