@@ -1,4 +1,5 @@
 name: CI workflow
+
 on:
   push:
     branches: [ "main" ]
@@ -7,8 +8,9 @@ on:
 
 jobs:
   build:
-    runs-on : ubuntu-latest
+    runs-on: ubuntu-latest
     container: python:3.9-slim
+<<<<<<< HEAD
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -26,3 +28,5 @@ jobs:
       - name: Run unit tests with nose
         run: nosetests -v --with-spec --spec-color --with-coverage --cover-package=app
 
+=======
+>>>>>>> 04b298127401a50df3491d96c0dcbe00b4336002
