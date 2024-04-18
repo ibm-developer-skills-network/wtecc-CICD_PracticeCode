@@ -12,9 +12,9 @@ jobs:
     steps:
       - name: Step 1 - Checkout
         uses: actions/checkout@v3
-
+      
       - name: Step 2 - Install python dependencies
-        run: |
+        run: | #use pipe to run multipe commands in one step
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
