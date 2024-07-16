@@ -1,0 +1,16 @@
+# name of the workflow
+name: CI workflow
+
+# triggers that starts the job (push and pull requests to/from main branch)
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # name of the job (i.e., jobname = "build")
+  build:
+    # runner for the job
+    runs-on: ubuntu-latest
+    container: python:3.9-slim
