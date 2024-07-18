@@ -2,9 +2,9 @@ name: CI workflow
 
 on:
   push:
-    branches: main
+    branches: local_testin
   pull_request:
-    branches: main
+    branches: local_testin
 
 jobs:
   build:
