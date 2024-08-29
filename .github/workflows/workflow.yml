@@ -10,4 +10,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container: python:3.9-slim
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run on one-line script
+        run: echo Hello from Octo Organiztion
   
