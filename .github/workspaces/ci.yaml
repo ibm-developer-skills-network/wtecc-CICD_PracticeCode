@@ -1,0 +1,21 @@
+name: CI Workflow
+
+on:
+  push:
+    branches: ['main']
+  pull-request:
+    branches: ['main']
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: pythin:3.9-slim
+    steps:
+      - name: checkout-code
+        id: checkout
+        uses: actions/checkout@v4
+        run:|
+          echo 'Code checkout successfully!!'
+        
+        
+        
+    
