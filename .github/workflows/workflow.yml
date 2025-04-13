@@ -19,7 +19,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Lint with flake8
-        run: flake8 --version
+        run: flake8
 
       - name: Run unit tests with nose
         run: nosetests -v --with-spec --spec-color --with-coverage --cover-package=app
