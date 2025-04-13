@@ -20,7 +20,7 @@ jobs:
 
       - name: Lint with flake8
         run: |
-          flake8 /home/project/wtecc-CICD_PracticeCode/service
+          flake8 --version
 
       - name: Run unit tests with nose
         run: nosetests -v --with-spec --spec-color --with-coverage --cover-package=app
