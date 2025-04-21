@@ -22,7 +22,7 @@ jobs:
       - name: Lint with flake8
         run: |
           pwd
-          ls -ltr
+          flake8 service/*.py --count --select=E9,F63,F7,F82 --show-source --statistics
 
       - name: Run unit tests with nose
         run: nosetests -v --with-coverage --cover-package=app
