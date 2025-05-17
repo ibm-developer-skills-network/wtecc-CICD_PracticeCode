@@ -1,14 +1,26 @@
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
-  name: <place-name-here>
+  name: cd-template
 spec:
   params:
-  # Add parameters here
+    - name: repository
+      description: The git repo
+      default: " "
+    - name: branch
+      description: the branch for the git repo
+      default: master
   resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
       metadata:
         generateName: cd-pipeline-run-
       spec:
-      # Add pipeline definition here
+        serviceAccountName: pipeline
+        pipelineRef:
+          name: cd-pipeline
+        params:
+          - name: repo-url
+            value: $(tt.params.repository)
+          - name: branch
+            value: $(tt.params.branch)
