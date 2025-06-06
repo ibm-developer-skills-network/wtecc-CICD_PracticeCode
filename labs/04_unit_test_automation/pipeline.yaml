@@ -10,50 +10,99 @@ spec:
     - name: branch
       default: master
   tasks:
-    - name: clone
+    - name: init-cleanup
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace          
+      taskRef:
+        name: cleanup
+
+    - name: clone-repo
       workspaces:
         - name: output
           workspace: pipeline-workspace          
       taskRef:
         name: git-clone
       params:
-      - name: url
-        value: $(params.repo-url)
-      - name: revision
-        value: $(params.branch)
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.branch)
+      runAfter:
+        - init-cleanup      
 
-    - name: lint
+    - name: lint-message
       taskRef:
         name: echo
       params:
-      - name: message
-        value: "Calling Flake8 linter..."
+        - name: message
+          value: "Calling Flake8 linter..."
       runAfter:
-        - clone
+        - clone-repo
 
-    - name: tests
+    - name: run-tests
       taskRef:
         name: echo
       params:
-      - name: message
-        value: "Running unit tests with PyUnit..."
+        - name: message
+          value: "Running unit tests with PyUnit..."
       runAfter:
-        - lint
+        - lint-message
 
-    - name: build
+    - name: build-image
       taskRef:
         name: echo
       params:
-      - name: message
-        value: "Building image for $(params.repo-url) ..."
+        - name: message
+          value: "Building image for $(params.repo-url) ..."
       runAfter:
-        - tests
+        - run-tests
 
-    - name: deploy
+    - name: lint-flake8-basic
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      taskRef:
+        name: flake8
+
+    - name: lint-flake8-advanced
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      taskRef:
+        name: flake8
+      params:
+        - name: image
+          value: "python:3.9-slim"
+        - name: args
+          value: ["--count", "--max-complexity=10", "--max-line-length=127", "--statistics"]
+      runAfter:
+        - clone-repo
+
+    - name: deploy-app
       taskRef:
         name: echo
       params:
-      - name: message
-        value: "Deploying $(params.branch) branch of $(params.repo-url) ..."
+        - name: message
+          value: "Deploying $(params.branch) branch of $(params.repo-url) ..."
       runAfter:
-        - build
+        - build-image
+
+    - name: tests-2
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      taskRef:
+        name: nose
+      params:
+      - name: args
+        value: "-v --with-spec --spec-color"
+      runAfter:
+        - lint-flake8-advanced
+
+    - name: init-cleanup-final
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      taskRef:
+        name: cleanup

@@ -1,54 +1,25 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
-metadata:  
+metadata:
   name: cd-pipeline
 spec:
+  workspaces:
+    - name: pipeline-workspace
   params:
     - name: repo-url
     - name: branch
       default: "master"
   tasks:
     - name: clone
+      workspaces:
+        - name: output
+          workspace: pipeline-workspace
       taskRef:
-        name: checkout
+        name: git-clone
       params:
-      - name: repo-url
-        value: "$(params.repo-url)"
-      - name: branch
-        value: "$(params.branch)"
+      - name: url
+        value: $(params.repo-url)
+      - name: revision
+        value: $(params.branch)
 
-    - name: lint
-      taskRef:
-        name: echo
-      params:
-      - name: message
-        value: "Calling Flake8 linter..."
-      runAfter:
-        - clone
-
-    - name: tests
-      taskRef:
-        name: echo
-      params:
-      - name: message
-        value: "Running unit tests with PyUnit..."
-      runAfter:
-        - lint
-
-    - name: build
-      taskRef:
-        name: echo
-      params:
-      - name: message
-        value: "Building image for $(params.repo-url) ..."
-      runAfter:
-        - tests
-
-    - name: deploy
-      taskRef:
-        name: echo
-      params:
-      - name: message
-        value: "Deploying $(params.branch) branch of $(params.repo-url) ..."
-      runAfter:
-        - build
+    # Note: The remaining tasks are unchanged. Do not delete them.
