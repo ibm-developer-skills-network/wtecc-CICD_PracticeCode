@@ -1,6 +1,6 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
-metadata:  
+metadata:
   name: cd-pipeline
 spec:
   workspaces:
@@ -10,17 +10,17 @@ spec:
     - name: branch
       default: master
   tasks:
-    - name: init-cleanup
+    - name: init-cleanup # Kept local change
       workspaces:
         - name: source
-          workspace: pipeline-workspace          
+          workspace: pipeline-workspace
       taskRef:
         name: cleanup
 
-    - name: clone-repo
+    - name: clone-repo # Kept local change
       workspaces:
         - name: output
-          workspace: pipeline-workspace          
+          workspace: pipeline-workspace
       taskRef:
         name: git-clone
       params:
@@ -29,7 +29,7 @@ spec:
         - name: revision
           value: $(params.branch)
       runAfter:
-        - init-cleanup      
+        - init-cleanup # Updated dependency
 
     - name: lint-message
       taskRef:
