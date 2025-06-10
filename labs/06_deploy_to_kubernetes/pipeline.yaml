@@ -6,6 +6,7 @@ spec:
   workspaces:
     - name: pipeline-workspace
   params:
+    - name: app-name
     - name: build-image
     - name: repo-url
     - name: branch
@@ -59,23 +60,24 @@ spec:
         - lint
 
     - name: build
+      params:
+        - name: IMAGE
+          value: "$(params.build-image)"
+      runAfter: ["tests"]
+      taskRef:
+        kind: ClusterTask
+        apiVersion: tekton.dev/v1beta1
+        name: buildah
       workspaces:
         - name: source
-          workspace: pipeline-workspace          
-      taskRef:
-        name: buildah
-        kind: ClusterTask
-      params:
-      - name: IMAGE
-        value: "$(params.build-image)"
-      runAfter:
-        - tests
+          workspace: pipeline-workspace
 
     - name: deploy
-      taskRef:
-        name: echo
       params:
-      - name: message
-        value: "Deploying $(params.branch) branch of $(params.repo-url) ..."
-      runAfter:
-        - build
+        - name: SCRIPT
+          value: "oc create deploy $(params.app-name) --image=$(params.build-image)"
+      runAfter: ["build"]
+      taskRef:
+        kind: ClusterTask
+        apiVersion: tekton.dev/v1beta1
+        name: openshift-client

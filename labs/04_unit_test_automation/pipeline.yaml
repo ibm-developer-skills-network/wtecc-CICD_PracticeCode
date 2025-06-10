@@ -31,21 +31,15 @@ spec:
       runAfter:
         - init      
 
-    - name: lint
-      taskRef:
-        name: echo
-      params:
-      - name: message
-        value: "Calling Flake8 linter..."
-      runAfter:
-        - clone
-
     - name: tests
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
       taskRef:
-        name: echo
+        name: nose
       params:
-      - name: message
-        value: "Running unit tests with PyUnit..."
+      - name: args
+        value: "-v --with-spec --spec-color"
       runAfter:
         - lint
 
@@ -66,3 +60,17 @@ spec:
         value: "Deploying $(params.branch) branch of $(params.repo-url) ..."
       runAfter:
         - build
+
+    - name: lint
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      taskRef:
+        name: flake8
+      params:
+      - name: image
+        value: "python:3.9-slim"
+      - name: args
+        value: ["--count","--max-complexity=10","--max-line-length=127","--statistics"]
+      runAfter:
+        - clone
