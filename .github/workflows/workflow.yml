@@ -1,0 +1,14 @@
+name: CI workflow
+
+on:
+  push:
+    branches: [ main ]           # Déclenche le workflow lors d'un push sur la branche main
+  pull_request:
+    branches: [ main ]           # Déclenche le workflow lors d'une pull request vers la branche main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: python:3.9-slim
+
+      
