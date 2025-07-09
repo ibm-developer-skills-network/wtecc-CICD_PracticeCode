@@ -22,7 +22,7 @@ def health():
 ############################################################
 @app.route("/")
 def index():
-    """Returns information abut the service"""
+    """Returns information about the service"""
     app.logger.info("Request for Base URL")
     return jsonify(
         status=status.HTTP_200_OK,
