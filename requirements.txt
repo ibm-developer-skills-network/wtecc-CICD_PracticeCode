@@ -20,7 +20,7 @@ nose==1.3.7
 pinocchio==0.4.3
 factory-boy==2.12.0
 coverage==6.3.2
-codecov==2.1.12
+codecov==2.1.13
 
 # Utilities
 httpie==3.2.1
